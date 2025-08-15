@@ -58,6 +58,14 @@ public:
     void addItems(const std::vector<String>& items);
 
     /**
+     * @brief Supprime un élément de la liste par son index.
+     * 
+     * @param index L'index de l'élément à supprimer.
+     * @return true si l'élément a été supprimé avec succès, false sinon.
+     */
+    bool removeItem(int index);
+
+    /**
      * @brief Récupère un élément par son index.
      * 
      * @param index L'index de l'élément à récupérer.

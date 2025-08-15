@@ -129,6 +129,12 @@ La structure `UIListBoxStyle` vous permet de contrôler l'apparence de votre lis
 *   `void setItems(const std::vector<String>& items)`
     *   Définit ou remplace tous les éléments de la liste.
 
+*   `void addItem(const String& item)`
+    *   Ajoute un seul élément à la fin de la liste.
+
+*   `void addItems(const std::vector<String>& items)`
+    *   Ajoute une collection d'éléments à la fin de la liste existante.
+
 *   `void setSelectedIndex(int index, bool triggerCallback = false)`
     *   Sélectionne un élément par son index. Si `triggerCallback` est `true`, le callback `onSelectionChanged` sera appelé.
 

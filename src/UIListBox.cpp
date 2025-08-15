@@ -22,6 +22,33 @@ void UIListBox::addItems(const std::vector<String>& items) {
     setDirty(true);
 }
 
+bool UIListBox::removeItem(int index) {
+    if (index < 0 || index >= _items.size()) {
+        return false; // Index invalide
+    }
+
+    _items.erase(_items.begin() + index);
+
+    // Ajuster l'index sélectionné si l'élément supprimé l'affecte
+    if (_selectedIndex == index) {
+        _selectedIndex = -1; // L'élément sélectionné a été supprimé
+    } else if (_selectedIndex > index) {
+        _selectedIndex--; // L'index sélectionné se décale vers le haut
+    }
+
+    // Ajuster l'index de l'élément supérieur visible si nécessaire
+    int maxTopIndex = _items.size() - _visibleItemCount;
+    if (maxTopIndex < 0) {
+        maxTopIndex = 0;
+    }
+    if (_topItemIndex > maxTopIndex) {
+        _topItemIndex = maxTopIndex;
+    }
+
+    setDirty(true);
+    return true;
+}
+
 const String& UIListBox::getItem(int index) const {
     static const String empty = "";
     if (index >= 0 && index < _items.size()) {
