@@ -7,7 +7,7 @@
   },
   "dependencies": {
     "UIComponent": "*",
-    "UITextComponent": "*"
+    "UITextComponent": "https://github.com/Aminehammou/UITextComponent.git"
   },
   "frameworks": "arduino",
   "platforms": "espressif32"
