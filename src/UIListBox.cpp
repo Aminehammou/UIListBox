@@ -12,6 +12,16 @@ void UIListBox::setItems(const std::vector<String>& items) {
     setDirty(true);
 }
 
+void UIListBox::addItem(const String& item) {
+    _items.push_back(item);
+    setDirty(true);
+}
+
+void UIListBox::addItems(const std::vector<String>& items) {
+    _items.insert(_items.end(), items.begin(), items.end());
+    setDirty(true);
+}
+
 const String& UIListBox::getItem(int index) const {
     static const String empty = "";
     if (index >= 0 && index < _items.size()) {

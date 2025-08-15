@@ -44,6 +44,20 @@ public:
     void setItems(const std::vector<String>& items);
 
     /**
+     * @brief Ajoute un élément à la fin de la liste.
+     * 
+     * @param item La chaîne de caractères (String) à ajouter.
+     */
+    void addItem(const String& item);
+
+    /**
+     * @brief Ajoute une liste d'éléments à la fin de la liste existante.
+     * 
+     * @param items Un vecteur de chaînes de caractères (String) à ajouter.
+     */
+    void addItems(const std::vector<String>& items);
+
+    /**
      * @brief Récupère un élément par son index.
      * 
      * @param index L'index de l'élément à récupérer.
