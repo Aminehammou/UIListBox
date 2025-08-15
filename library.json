@@ -1,0 +1,14 @@
+{
+  "name": "UIListBox",
+  "version": "1.0.0",
+  "description": "A scrollable and selectable list box component for the UI framework.",
+  "authors": {
+    "name": "Gemini"
+  },
+  "dependencies": {
+    "UIComponent": "*",
+    "UITextComponent": "*"
+  },
+  "frameworks": "arduino",
+  "platforms": "espressif32"
+}
