@@ -1,23 +1,29 @@
 #include "UIListBox.h"
+#include <algorithm> // Pour std::copy
 
 UIListBox::UIListBox(U8g2_for_TFT_eSPI& u8f, const UIRect& rect, const UIListBoxStyle& style)
     : UITextComponent(u8f, rect, ""), _style(style) {
     _visibleItemCount = rect.h / _style.itemHeight;
 }
 
-void UIListBox::setItems(const std::vector<String>& items) {
+void UIListBox::setItems(const std::vector<ListBoxItem>& items) {
     _items = items;
     _selectedIndex = -1;
     _topItemIndex = 0;
     setDirty(true);
 }
 
-void UIListBox::addItem(const String& item) {
+void UIListBox::addItem(const ListBoxItem& item) {
     _items.push_back(item);
     setDirty(true);
 }
 
-void UIListBox::addItems(const std::vector<String>& items) {
+void UIListBox::addItem(const String& text, const uint8_t* mac) {
+    _items.emplace_back(text, mac);
+    setDirty(true);
+}
+
+void UIListBox::addItems(const std::vector<ListBoxItem>& items) {
     _items.insert(_items.end(), items.begin(), items.end());
     setDirty(true);
 }
@@ -49,12 +55,12 @@ bool UIListBox::removeItem(int index) {
     return true;
 }
 
-const String& UIListBox::getItem(int index) const {
-    static const String empty = "";
+const ListBoxItem& UIListBox::getItem(int index) const {
+    static const ListBoxItem emptyItem; // Retourne un ListBoxItem vide par défaut
     if (index >= 0 && index < _items.size()) {
         return _items[index];
     }
-    return empty;
+    return emptyItem;
 }
 
 int UIListBox::getItemCount() const {
@@ -76,10 +82,22 @@ int UIListBox::getSelectedIndex() const {
 }
 
 const String& UIListBox::getSelectedText() const {
-    return getItem(_selectedIndex);
+    if (_selectedIndex >= 0 && _selectedIndex < _items.size()) {
+        return _items[_selectedIndex].text;
+    }
+    static const String empty = "";
+    return empty;
 }
 
-void UIListBox::onSelectionChanged(std::function<void(int, String)> callback) {
+const std::array<uint8_t, 6>& UIListBox::getSelectedMacAddress() const {
+    if (_selectedIndex >= 0 && _selectedIndex < _items.size()) {
+        return _items[_selectedIndex].macAddress;
+    }
+    static const std::array<uint8_t, 6> emptyMac = {0, 0, 0, 0, 0, 0};
+    return emptyMac;
+}
+
+void UIListBox::onSelectionChanged(std::function<void(int, const ListBoxItem&)> callback) {
     _onSelectionChangedCallback = callback;
 }
 
@@ -114,7 +132,7 @@ void UIListBox::drawInternal(TFT_eSPI& tft, bool force) {
         int16_t textH = _u8f.getFontAscent() - _u8f.getFontDescent();
         int textY_baseline = itemY + (_style.itemHeight + textH) / 2;
         _u8f.setCursor(rect.x + 5, textY_baseline); // Marge de 5px à gauche
-        _u8f.print(_items[itemIndex]);
+        _u8f.print(_items[itemIndex].text); // Utiliser le membre 'text' de ListBoxItem
     }
 
     // 5. Dessiner la barre de défilement si nécessaire

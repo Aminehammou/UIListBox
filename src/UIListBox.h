@@ -4,6 +4,41 @@
 #include "UITextComponent.h"
 #include <vector>
 #include <functional>
+#include <array> // Pour std::array
+
+/**
+ * @brief Structure représentant un élément de la liste avec son texte et son adresse MAC associée.
+ */
+struct ListBoxItem {
+    String text;
+    std::array<uint8_t, 6> macAddress; // Adresse MAC (6 octets)
+
+    // Constructeur par défaut
+    ListBoxItem() : text("") {
+        macAddress.fill(0); // Initialise l'adresse MAC à zéro
+    }
+
+    // Constructeur avec texte et adresse MAC
+    ListBoxItem(const String& t, const uint8_t* mac) : text(t) {
+        if (mac) {
+            std::copy(mac, mac + 6, macAddress.begin());
+        } else {
+            macAddress.fill(0);
+        }
+    }
+
+    // Constructeur de copie
+    ListBoxItem(const ListBoxItem& other) : text(other.text), macAddress(other.macAddress) {}
+
+    // Opérateur d'affectation de copie
+    ListBoxItem& operator=(const ListBoxItem& other) {
+        if (this != &other) {
+            text = other.text;
+            macAddress = other.macAddress; // std::array a son propre opérateur d'affectation
+        }
+        return *this;
+    }
+};
 
 /**
  * @brief Définit l'apparence visuelle d'un composant UIListBox.
@@ -39,23 +74,31 @@ public:
     /**
      * @brief Définit les éléments à afficher dans la liste.
      * 
-     * @param items Un vecteur de chaînes de caractères (String) représentant les éléments.
+     * @param items Un vecteur de structures ListBoxItem représentant les éléments.
      */
-    void setItems(const std::vector<String>& items);
+    void setItems(const std::vector<ListBoxItem>& items);
 
     /**
      * @brief Ajoute un élément à la fin de la liste.
      * 
-     * @param item La chaîne de caractères (String) à ajouter.
+     * @param item La structure ListBoxItem à ajouter.
      */
-    void addItem(const String& item);
+    void addItem(const ListBoxItem& item);
+
+    /**
+     * @brief Ajoute un élément à la fin de la liste avec un texte et une adresse MAC.
+     * 
+     * @param text Le texte de l'élément.
+     * @param mac L'adresse MAC de l'élément (tableau de 6 octets).
+     */
+    void addItem(const String& text, const uint8_t* mac);
 
     /**
      * @brief Ajoute une liste d'éléments à la fin de la liste existante.
      * 
-     * @param items Un vecteur de chaînes de caractères (String) à ajouter.
+     * @param items Un vecteur de structures ListBoxItem à ajouter.
      */
-    void addItems(const std::vector<String>& items);
+    void addItems(const std::vector<ListBoxItem>& items);
 
     /**
      * @brief Supprime un élément de la liste par son index.
@@ -69,9 +112,9 @@ public:
      * @brief Récupère un élément par son index.
      * 
      * @param index L'index de l'élément à récupérer.
-     * @return const String& Le texte de l'élément. Retourne une chaîne vide si l'index est invalide.
+     * @return const ListBoxItem& L'élément complet. Retourne un ListBoxItem vide si l'index est invalide.
      */
-    const String& getItem(int index) const;
+    const ListBoxItem& getItem(int index) const;
 
     /**
      * @brief Obtient le nombre total d'éléments dans la liste.
@@ -104,11 +147,18 @@ public:
     const String& getSelectedText() const;
 
     /**
+     * @brief Obtient l'adresse MAC de l'élément actuellement sélectionné.
+     * 
+     * @return const std::array<uint8_t, 6>& L'adresse MAC de la sélection. Retourne une adresse MAC nulle si aucun élément n'est sélectionné.
+     */
+    const std::array<uint8_t, 6>& getSelectedMacAddress() const;
+
+    /**
      * @brief Définit une fonction de rappel à exécuter lorsque la sélection change.
      * 
-     * @param callback La fonction à appeler. Elle prend en paramètre l'index et le texte du nouvel élément sélectionné.
+     * @param callback La fonction à appeler. Elle prend en paramètre l'index et l'élément complet du nouvel élément sélectionné.
      */
-    void onSelectionChanged(std::function<void(int, String)> callback);
+    void onSelectionChanged(std::function<void(int, const ListBoxItem&)> callback);
 
     // Surcharge des méthodes de UIComponent pour la gestion du tactile
     void handlePress(TFT_eSPI& tft, int tx, int ty) override;
@@ -124,12 +174,12 @@ private:
     void drawInternal(TFT_eSPI& tft, bool force) override;
 
     UIListBoxStyle _style;                      ///< Style visuel de la liste.
-    std::vector<String> _items;                 ///< Conteneur pour les éléments de la liste.
+    std::vector<ListBoxItem> _items;            ///< Conteneur pour les éléments de la liste.
     int _selectedIndex = -1;                    ///< Index de l'élément actuellement sélectionné.
     int _topItemIndex = 0;                      ///< Index du premier élément visible (pour le défilement).
     int _visibleItemCount = 0;                  ///< Nombre d'éléments visibles à l'écran.
 
-    std::function<void(int, String)> _onSelectionChangedCallback; ///< Pointeur de fonction pour le callback de sélection.
+    std::function<void(int, const ListBoxItem&)> _onSelectionChangedCallback; ///< Pointeur de fonction pour le callback de sélection.
 
     // Variables pour la gestion du défilement par glissement
     bool _isDragging = false;                   ///< Vrai si un glissement est en cours.
