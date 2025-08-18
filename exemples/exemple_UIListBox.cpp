@@ -9,14 +9,13 @@
  * 
  */
 #include <Arduino.h>
-#include <TFT_eSPI.h>
-#include <U8g2_for_TFT_eSPI.h>
 #include <vector>
 #include <memory>
+#include <TFT_eSPI.h>
+#include <U8g2_for_TFT_eSPI.h>
 
 // Inclure les composants UI nécessaires
 #include "UIComponent.h"
-#include "UICheckbox.h"
 #include "UIListBox.h" // <-- INCLURE LE NOUVEAU COMPOSANT
 
 #define BACKLIGHT_PIN 32
@@ -63,18 +62,7 @@ void setup() {
     u8f.begin(tft); // Initialise le helper U8g2
 
     // 2. Définition des styles
-    // Style pour la Checkbox
-    UICheckboxStyle checkboxStyle;
-    checkboxStyle.labelStyle.font = u8g2_font_profont17_tr;
-    checkboxStyle.labelStyle.textColor = TFT_WHITE;
-    checkboxStyle.labelStyle.bgColor = TFT_BLACK;
-    checkboxStyle.labelStyle.disabledTextColor = TFT_DARKGREY;
-    checkboxStyle.boxColor = TFT_CYAN;
-    checkboxStyle.checkColor = TFT_GREEN;
-    checkboxStyle.disabledBoxColor = TFT_DARKGREY;
-    checkboxStyle.boxSize = 20;
-    checkboxStyle.spacing = 12;
-
+    
     // Style pour la ListBox
     UIListBoxStyle listBoxStyle;
     listBoxStyle.font = u8g2_font_profont15_tr; // Police légèrement plus petite
@@ -87,26 +75,64 @@ void setup() {
     listBoxStyle.scrollBarColor = TFT_LIGHTGREY;
 
     // 3. Création des composants
-    
-    // Checkbox
-    auto checkbox1 = new UICheckbox(u8f, {10, 10, 140, 30}, "Logs", checkboxStyle, true);
-    components.emplace_back(checkbox1);
 
     // ListBox
     auto listBox = new UIListBox(u8f, {160, 10, 150, 220}, listBoxStyle);
     
     // Ajout des éléments à la ListBox
-    std::vector<String> cities = {
+    std::vector<ListBoxItem> cities;
+
+    // 1. Définissez vos données (noms et adresses MAC)
+    const char* city_names[] = {
         "Paris", "Tokyo", "New York", "London", "Berlin",
         "Sydney", "Cairo", "Moscow", "Beijing", "Toronto",
         "Madrid", "Rome", "Lisbon", "Amsterdam"
     };
+
+    // Adresses MAC d'exemple (6 octets par adresse)
+    uint8_t macs[][6] = {
+        {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED}, // Paris
+        {0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC}, // Tokyo
+        {0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF}, // New York
+        {0x00, 0x11, 0x22, 0x33, 0x44, 0x55}, // London
+        // Laissez les autres vides pour l'exemple
+    };
+
+    // 2. Créez les ListBoxItem avec le nom et l'adresse MAC
+    size_t num_cities = sizeof(city_names) / sizeof(city_names[0]);
+    size_t num_macs = sizeof(macs) / sizeof(macs[0]);
+
+    for (size_t i = 0; i < num_cities; ++i) {
+        // Si une adresse MAC existe pour cette ville, on l'ajoute
+        uint8_t* current_mac = (i < num_macs) ? macs[i] : nullptr;
+        cities.push_back(ListBoxItem(city_names[i], current_mac));
+    }
+
     listBox->setItems(cities);
     listBox->setSelectedIndex(2); // "New York" par défaut
 
-    // Définition du callback pour la ListBox
-    listBox->onSelectionChanged([](int index, String text) {
-        Serial.printf("ListBox selection: Index=%d, Text=%s\n", index, text.c_str());
+    // 3. Mettez à jour le callback pour afficher l'adresse MAC
+    listBox->onSelectionChanged([](int index, const ListBoxItem& item) {
+        Serial.printf("ListBox selection: Index=%d, Text=%s\n", index, item.text.c_str());
+        
+        // Vérifie si l'adresse MAC n'est pas nulle
+        bool isMacValid = false;
+        for(int i = 0; i < 6; ++i) {
+            if (item.macAddress[i] != 0) {
+                isMacValid = true;
+                break;
+            }
+        }
+
+        if (isMacValid) {
+            Serial.print("  MAC Address: ");
+            for(int i = 0; i < 6; ++i) {
+                if(item.macAddress[i] < 0x10) Serial.print("0");
+                Serial.print(item.macAddress[i], HEX);
+                if(i < 5) Serial.print(":");
+            }
+            Serial.println();
+        }
     });
     components.emplace_back(listBox);
 
